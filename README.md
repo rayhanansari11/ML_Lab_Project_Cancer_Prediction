@@ -47,8 +47,8 @@ ML_Lab_Project_Cancer_Prediction/
 ├── models/
 │ └── cancer_model.pkl
 ├── src/
-│ ├── model_training.py
 │ ├── eda.ipynb
-│ └── model_training.ipynb
-
+│ ├── model_training.ipynb
+│ └── model_training.py
+├── README.md
 
