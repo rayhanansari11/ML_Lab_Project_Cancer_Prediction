@@ -37,4 +37,18 @@ The app is fully interactive, supports instant predictions, downloadable **PDF r
 ---
 
 ## 📂 Folder Structure
+ML_Lab_Project_Cancer_Prediction/
+├── app/
+│ └── app.py
+├── data/
+│ └── The_Cancer_data_V2.csv
+├── images/
+│ └── background_image.jpg
+├── models/
+│ └── cancer_model.pkl
+├── src/
+│ ├── model_training.py
+│ ├── eda.ipynb
+│ └── model_training.ipynb
+
 
