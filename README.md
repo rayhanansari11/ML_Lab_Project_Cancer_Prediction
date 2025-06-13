@@ -36,24 +36,7 @@ The app is fully interactive, supports instant predictions, downloadable **PDF r
 
 ---
 
-## 📂 Folder Structure
-ML_Lab_Project_Cancer_Prediction/
-├── app/                  # Streamlit application
-│   └── app.py            # Main application logic
-├── data/                 # Datasets
-│   ├── The_Cancer_data_V2.csv
-│   ├── X_train.csv
-│   └── X_test.csv
-├── images/               # Assets
-│   └── background_image.jpg
-├── models/               # Serialized models
-│   └── cancer_model.pkl
-├── src/                  # Development scripts
-│   ├── eda.ipynb         # Exploratory analysis
-│   ├── model_training.ipynb
-│   └── model_training.py # Training pipeline
-├── requirements.txt      # Dependencies
-└── README.md             # Project documentation
+![image](https://github.com/user-attachments/assets/47d19609-a755-4ec8-bfa5-acf0f1100234)
 
 
 
