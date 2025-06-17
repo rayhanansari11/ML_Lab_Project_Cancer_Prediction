@@ -150,13 +150,16 @@ elif page == "Cancer Prediction":
         report["Confidence (%)"] = round(probability * 100, 2)
         st.subheader("📋 Prediction Summary")
         st.dataframe(report)
-
+        
         st.subheader("🔍 Cancer Likelihood")
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(6, 4), facecolor='none')
         ax.bar(["No Cancer", "Cancer"], model.predict_proba(input_df)[0], color=["green", "red"])
         ax.set_ylabel("Probability")
         ax.set_ylim(0, 1)
+        ax.set_facecolor('none')  # Transparent plot background
+        fig.patch.set_alpha(0)    # Transparent figure background
         st.pyplot(fig)
+
 
         pdf_buffer = generate_pdf(
             dict(zip(feature_names, user_input)),
