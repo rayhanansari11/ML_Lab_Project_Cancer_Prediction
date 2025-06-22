@@ -6,9 +6,13 @@ import matplotlib.pyplot as plt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import io
+from keras.models import load_model
+from PIL import Image, ImageOps
+import numpy as np
 
-# === Load trained model ===
-model = joblib.load("models/cancer_model.pkl")
+# === Load models ===
+tabular_model = joblib.load("models/cancer_model.pkl")
+cnn_model = load_model("models/keras_model.h5", compile=False)
 
 # === Feature Names ===
 feature_names = [
@@ -55,7 +59,6 @@ def generate_pdf(data: dict, diagnosis: str, confidence: float):
         c.drawString(40, y, f"{k}: {v}")
         y -= 20
 
-    # Suggestions
     y -= 10
     c.setFont("Helvetica-Bold", 12)
     c.drawString(40, y, "Health Recommendation:")
@@ -86,7 +89,8 @@ def generate_pdf(data: dict, diagnosis: str, confidence: float):
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Select a Page", [
     "Home", 
-    "Cancer Prediction", 
+    "Cancer Prediction (Tabular)", 
+    "Lung Cancer Prediction (Image CNN)", 
     "Learn More About Cancer", 
     "About"
 ])
@@ -95,13 +99,16 @@ page = st.sidebar.radio("Select a Page", [
 if page == "Home":
     st.title("Welcome to the Cancer Prediction App")
     st.write("""
-        This app uses a trained machine learning model to predict the likelihood of cancer 
-        based on patient data. Use the sidebar to navigate and make predictions or learn more about the project.
+        This app provides two types of cancer prediction:
+        - **Tabular model** (age, BMI, lifestyle factors)
+        - **CNN image model** (chest X-ray images)
+
+        Use the sidebar to navigate and try both models.
     """)
 
-# === Cancer Prediction Page ===
-elif page == "Cancer Prediction":
-    st.title("🩺 Cancer Prediction")
+# === Tabular Cancer Prediction ===
+elif page == "Cancer Prediction (Tabular)":
+    st.title("🩺 Cancer Prediction (Tabular Data)")
     st.subheader("Enter patient details")
 
     default_values = {
@@ -138,8 +145,8 @@ elif page == "Cancer Prediction":
 
     if st.button("Predict"):
         input_df = pd.DataFrame([user_input], columns=feature_names)
-        prediction = model.predict(input_df)[0]
-        probability = model.predict_proba(input_df)[0][prediction]
+        prediction = tabular_model.predict(input_df)[0]
+        probability = tabular_model.predict_proba(input_df)[0][prediction]
         label = "🛑 Cancer Detected" if prediction == 1 else "✅ No Cancer"
 
         st.success(f"**Prediction**: {label}")
@@ -150,12 +157,10 @@ elif page == "Cancer Prediction":
         report["Confidence (%)"] = round(probability * 100, 2)
         st.subheader("📋 Prediction Summary")
         st.dataframe(report)
-        
-        
 
         st.subheader("🔍 Cancer Likelihood")
         fig, ax = plt.subplots()
-        ax.bar(["No Cancer", "Cancer"], model.predict_proba(input_df)[0], color=["green", "red"])
+        ax.bar(["No Cancer", "Cancer"], tabular_model.predict_proba(input_df)[0], color=["green", "red"])
         ax.set_ylabel("Probability")
         ax.set_ylim(0, 1)
         st.pyplot(fig)
@@ -173,10 +178,50 @@ elif page == "Cancer Prediction":
             mime="application/pdf"
         )
 
-# === Learn More About Cancer Page ===
+# === CNN Image Prediction ===
+elif page == "Lung Cancer Prediction (Image CNN)":
+    st.title("📷 Lung Cancer Prediction Using CNN")
+    st.write("""
+        Upload a chest X-ray image. The CNN model will classify it into:
+        - Adenocarcinoma
+        - Large Cell Carcinoma
+        - Normal
+        - Squamous Cell Carcinoma
+    """)
+
+    uploaded_file = st.file_uploader("Upload Chest X-ray Image", type=["jpg", "jpeg", "png"])
+
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file).convert("RGB")
+        st.image(image, caption="Uploaded Image", use_column_width=True)
+
+        img_resized = ImageOps.fit(image, (224, 224), Image.Resampling.LANCZOS)
+        img_array = np.asarray(img_resized).astype(np.float32)
+        normalized_image_array = (img_array / 127.5) - 1
+        img_array_exp = np.expand_dims(normalized_image_array, axis=0)
+
+        prediction = cnn_model.predict(img_array_exp)
+        predicted_class_idx = np.argmax(prediction[0])
+
+        class_labels = [
+            "adenocarcinoma",
+            "large.cell.carcinoma",
+            "normal",
+            "squamous.cell.carcinoma"
+        ]
+
+        st.success(f"Prediction: **{class_labels[predicted_class_idx]}**")
+        st.write(f"Confidence: **{prediction[0][predicted_class_idx] * 100:.2f}%**")
+
+        fig, ax = plt.subplots()
+        ax.bar(class_labels, prediction[0], color=["red", "orange", "green", "purple"])
+        ax.set_ylabel("Probability")
+        ax.set_ylim(0, 1)
+        st.pyplot(fig)
+
+# === Learn More ===
 elif page == "Learn More About Cancer":
     st.title("📘 Learn More About Cancer")
-
     st.subheader("🔎 Common Causes of Cancer")
     st.write("""
     - Smoking and tobacco use  
@@ -232,26 +277,34 @@ elif page == "Learn More About Cancer":
     - Mayo Clinic, Rochester, USA  
     """)
 
-# === About Page ===
+# === About ===
 elif page == "About":
     st.title("About the App")
     st.subheader("Created by:")
+
     st.write("### Rayhan Mahmud Ansari")
     st.write("Dept. of CSE, Sylhet Engineering College")
     st.write("Email: rayhan_mahmud@sec.ac.bd")
+    st.write("GitHub: [github.com/rayhan-mahmud](https://github.com/rayhanansari11)")
+    st.write("LinkedIn: [linkedin.com/in/rayhanmahmud](https://www.linkedin.com/in/rayhan-mahmud-ansari-566d/?originalSubdomain=bd)")
 
     st.write("### Nurul Islam Opu")
     st.write("Dept. of CSE, Sylhet Engineering College")
     st.write("Email: nurulislamopu1@gmail.com")
+    st.write("GitHub: [github.com/nurulopu](https://github.com/nurulopu)")
+    st.write("LinkedIn: [linkedin.com/in/nurulopu](https://www.linkedin.com/in/nurul-islam-opu-8669ba247/)")
 
     st.write("""
-        This app predicts the presence of cancer based on various patient metrics like age, BMI,
-        alcohol intake, genetic risk factors, etc. The model was trained using supervised learning techniques.
+        This app combines two types of cancer prediction:
+        - A tabular model using features like age, BMI, smoking, etc.
+        - A CNN model using chest X-ray images for lung cancer detection
+
+        The CNN model was built using transfer learning (Xception base + custom classifier layers).
 
         **Features:**
-        - Clean user interface with background image  
-        - Instant predictions with default values  
-        - Visualization and downloadable PDF report  
-        - Educational section about cancer and resources  
+        - Clean user interface with background image
+        - Predict cancer likelihood from both tabular data and images
+        - Probability visualization and PDF report download
+        - Educational resources about cancer causes, prevention, and treatment options
     """)
     st.write("### Model Version: 1.0.3")
