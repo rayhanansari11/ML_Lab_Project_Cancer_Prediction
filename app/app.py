@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import io
-from tensorflow.keras.models import load_model
+from keras.models import load_model  # no standalone keras unless installed
 from PIL import Image, ImageOps
 import numpy as np
 
